@@ -15,6 +15,9 @@ from handlers.mergepdf_handler import MergePdfHandler
 from handlers.fileconverter_handler import FileConverterHandler
 from utils.logging_utils import setup_logging
 
+from webserver import run_flask  # Import the Flask web server function
+from threading import Thread  # For running Flask in a separate thread
+
 logger = setup_logging()
 
 class Bot:
@@ -137,6 +140,11 @@ class Bot:
 
     def run(self):
         logger.info("Bot is starting...")
+        # Run Flask in a separate thread
+        flask_thread = Thread(target=run_flask)
+        flask_thread.start()
+        
+        # Run the bot
         self.app.run()
 
 if __name__ == "__main__":
