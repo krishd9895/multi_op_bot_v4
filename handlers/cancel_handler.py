@@ -6,12 +6,14 @@ from utils.file_utils import cleanup_user_data
 from handlers.unarchive_handler import cancel_extraction
 
 class CancelHandler:
-    def __init__(self, user_settings, pdf_handler=None, split_pdf_handler=None, pdf2image_handler=None, merge_pdf_handler=None):
+    def __init__(self, user_settings, pdf_handler=None, split_pdf_handler=None, 
+                 pdf2image_handler=None, merge_pdf_handler=None, file_converter_handler=None):
         self.user_settings = user_settings
         self.pdf_handler = pdf_handler
         self.split_pdf_handler = split_pdf_handler
         self.pdf2image_handler = pdf2image_handler
         self.merge_pdf_handler = merge_pdf_handler
+        self.file_converter_handler = file_converter_handler
 
     async def handle_cancel(self, client, message):
         try:
@@ -41,16 +43,28 @@ class CancelHandler:
                 del self.pdf2image_handler.user_pdfs[chat_id]
                 pdf2image_cancelled = True
 
-            # Add to existing cancel checks
+            # Check if there's an active PDF merge operation
             merge_cancelled = False
             if self.merge_pdf_handler and chat_id in self.merge_pdf_handler.merge_sessions:
                 self.merge_pdf_handler.cleanup_user_data(chat_id)
                 merge_cancelled = True
 
+            # Check if there's an active file conversion operation
+            converter_cancelled = False
+            if self.file_converter_handler and (
+                chat_id in self.file_converter_handler.pdf_expected or 
+                chat_id in self.file_converter_handler.txt_expected or 
+                chat_id in self.file_converter_handler.current_pdf
+            ):
+                self.file_converter_handler.cleanup_user_data(chat_id)
+                converter_cancelled = True
+
             # Check if there's an active extraction
             archive_cancelled = await cancel_extraction(chat_id)
 
-            if resize_cancelled or pdf_cancelled or split_cancelled or pdf2image_cancelled or archive_cancelled or merge_cancelled:
+            if (resize_cancelled or pdf_cancelled or split_cancelled or 
+                pdf2image_cancelled or archive_cancelled or merge_cancelled or 
+                converter_cancelled):
                 await message.reply_text("✅ Current operation has been cancelled. You can start a new operation.")
             else:
                 await message.reply_text("No active operation to cancel.")
