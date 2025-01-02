@@ -1,0 +1,9 @@
+pyrogram==2.0.106
+tgcrypto==1.2.5
+Pillow==9.5.0
+PyPDF2==3.0.1
+patool==1.12
+rarfile
+py7zr
+pyunpack
+PyMuPDF
