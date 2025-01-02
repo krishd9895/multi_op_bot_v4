@@ -12,3 +12,4 @@ pdf2docx
 pandas
 tabula-py
 camelot-py
+flask
