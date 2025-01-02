@@ -5,9 +5,9 @@ Configuration settings for the Telegram bot
 import os
 
 # Fetch credentials from environment variables if available, otherwise prompt for manual entry
-API_ID = os.getenv("API_ID", input("Enter API_ID: "))
-API_HASH = os.getenv("API_HASH", input("Enter API_HASH: "))
-BOT_TOKEN = os.getenv("BOT_TOKEN", input("Enter BOT_TOKEN: "))
+API_ID = os.getenv("API_ID")
+API_HASH = os.getenv("API_HASH")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # Base directories
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
