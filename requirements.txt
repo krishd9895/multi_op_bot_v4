@@ -3,7 +3,11 @@ tgcrypto==1.2.5
 Pillow==9.5.0
 PyPDF2==3.0.1
 patool==1.12
+PyMuPDF==1.24.14
+fonttools==4.54.1
 rarfile
 py7zr
 pyunpack
-PyMuPDF
+pdf2docx
+pandas
+tabula-py
