@@ -12,6 +12,7 @@ from handlers.unarchive_handler import start_unarchive, handle_archive
 from handlers.splitpdf_handler import SplitPdfHandler
 from handlers.pdf2image_handler import PdfToImageHandler
 from handlers.mergepdf_handler import MergePdfHandler
+from handlers.fileconverter_handler import FileConverterHandler
 from utils.logging_utils import setup_logging
 
 logger = setup_logging()
@@ -30,6 +31,7 @@ class Bot:
         self.split_pdf_handler = SplitPdfHandler()
         self.pdf2image_handler = PdfToImageHandler()
         self.merge_pdf_handler = MergePdfHandler()
+        self.file_converter_handler = FileConverterHandler()
         
         # Initialize cancel handler after all other handlers
         self.cancel_handler = CancelHandler(
@@ -37,7 +39,8 @@ class Bot:
             pdf_handler=self.pdf_handler,
             split_pdf_handler=self.split_pdf_handler,
             pdf2image_handler=self.pdf2image_handler,
-            merge_pdf_handler=self.merge_pdf_handler
+            merge_pdf_handler=self.merge_pdf_handler,
+            file_converter_handler=self.file_converter_handler
         )
         
         self.setup_handlers()
@@ -55,7 +58,12 @@ class Bot:
 
         @self.app.on_callback_query()
         async def callback(client, callback_query):
-            await self.image_handler.handle_callback(client, callback_query)
+            chat_id = callback_query.message.chat.id
+            if chat_id in self.image_handler.user_settings:
+                await self.image_handler.handle_callback(client, callback_query)
+            else:
+                await self.file_converter_handler.handle_callback(client, callback_query)
+
 
         # PDF handlers
         @self.app.on_message(filters.command("image2pdf"))
@@ -81,6 +89,10 @@ class Bot:
         async def unarchive_command(client, message):
             await start_unarchive(client, message)
 
+        @self.app.on_message(filters.command("fileconv"))
+        async def file_conversion_command(client, message):
+            await self.file_converter_handler.start_conversion(client, message)
+
         @self.app.on_message(filters.document)
         async def document_handler(client, message):
             chat_id = message.chat.id
@@ -88,11 +100,12 @@ class Bot:
                 await self.pdf_handler.handle_pdf_image(client, message)
             elif chat_id in self.merge_pdf_handler.merge_sessions:
                 await self.merge_pdf_handler.handle_pdf(client, message)
+            elif chat_id in self.file_converter_handler.pdf_expected:
+                await self.file_converter_handler.handle_pdf(client, message)
             else:
                 await handle_archive(client, message)
 
-
-
+        
         @self.app.on_message(filters.photo)
         async def handle_photo(client, message):
             await self.pdf_handler.handle_pdf_image(client, message)
@@ -105,13 +118,15 @@ class Bot:
         async def handle_skip(client, message):
             await self.pdf_handler.handle_skip_name(client, message)
 
-        @self.app.on_message(filters.text & ~filters.command(["help", "resizeimage", "image2pdf", "skip", "cancel", "unarchive", "splitpdf", "pdf2image", "mergepdf"]))
+        @self.app.on_message(filters.text & ~filters.command(["help", "resizeimage", "image2pdf", "skip", "cancel", "unarchive", "splitpdf", "pdf2image", "mergepdf", "fileconv"]))
         async def handle_text(client, message):
             chat_id = message.chat.id
             if chat_id in self.merge_pdf_handler.merge_sessions:
                 await self.merge_pdf_handler.handle_merge_complete(client, message)
             elif chat_id in self.pdf_handler.waiting_for_name:
                 await self.pdf_handler.handle_pdf_name(client, message)
+            elif chat_id in self.file_converter_handler.txt_expected:
+                await self.file_converter_handler.handle_text(client, message)
             else:
                 await self.image_handler.handle_text(client, message)
 
