@@ -4,7 +4,6 @@ Configuration settings for the Telegram bot
 """
 import os
 
-# Fetch credentials from environment variables if available, otherwise prompt for manual entry
 API_ID = os.getenv("API_ID")
 API_HASH = os.getenv("API_HASH")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
